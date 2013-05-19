@@ -525,7 +525,7 @@ class Generator(object):
         self.outdir = opts['outdir']
         self.prefix = opts['prefix']
         self.headers = opts['headers'].split(' ')
-        self.classes = opts['classes']
+        self.classes = re.split(",\r?\n?", opts['classes'])
         self.classes_have_no_parents = opts['classes_have_no_parents'].split(' ')
         self.base_classes_to_skip = opts['base_classes_to_skip'].split(' ')
         self.abstract_classes = opts['abstract_classes'].split(' ')
@@ -543,7 +543,8 @@ class Generator(object):
         self.script_control_cpp = opts['script_control_cpp'] == "yes"
 
         if opts['skip']:
-            list_of_skips = re.split(",\n?", opts['skip'])
+            list_of_skips = re.split(",\r?\n?", opts['skip'])
+
             for skip in list_of_skips:
                 class_name, methods = skip.split("::")
                 self.skip_classes[class_name] = []
@@ -553,7 +554,7 @@ class Generator(object):
                 else:
                     raise Exception("invalid list of skip methods")
         if opts['rename_functions']:
-            list_of_function_renames = re.split(",\n?", opts['rename_functions'])
+            list_of_function_renames = re.split(",\r?\n?", opts['rename_functions'])
             for rename in list_of_function_renames:
                 class_name, methods = rename.split("::")
                 self.rename_functions[class_name] = {}
@@ -567,7 +568,7 @@ class Generator(object):
                     raise Exception("invalid list of rename methods")
 
         if opts['rename_classes']:
-            list_of_class_renames = re.split(",\n?", opts['rename_classes'])
+            list_of_class_renames = re.split(",\r?\n?", opts['rename_classes'])
             for rename in list_of_class_renames:
                 class_name, renamed_class_name = rename.split("::")
                 self.rename_classes[class_name] = renamed_class_name
@@ -793,7 +794,7 @@ def main():
             gen_opts = {
                 'prefix': config.get(s, 'prefix'),
                 'headers':    (config.get(s, 'headers'        , 0, dict(userconfig.items('DEFAULT')))),
-                'classes': config.get(s, 'classes').split(' '),
+                'classes': config.get(s, 'classes'),
                 'clang_args': (config.get(s, 'extra_arguments', 0, dict(userconfig.items('DEFAULT'))) or "").split(" "),
                 'target': os.path.join(workingdir, "targets", t),
                 'outdir': outdir,
