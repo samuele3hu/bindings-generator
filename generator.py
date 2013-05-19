@@ -273,9 +273,9 @@ class NativeFunction(object):
     def generate_code(self, current_class=None, generator=None):
         gen = current_class.generator if current_class else generator
         config = gen.config
-        tpl = Template(file=os.path.join(gen.target, "templates", "function.h"),
-                        searchList=[current_class, self])
-        gen.head_file.write(str(tpl))
+        # tpl = Template(file=os.path.join(gen.target, "templates", "function.h"),
+        #                 searchList=[current_class, self])
+        # gen.head_file.write(str(tpl))
         if self.static:
             if config['definitions'].has_key('sfunction'):
                 tpl = Template(config['definitions']['sfunction'],
@@ -296,6 +296,7 @@ class NativeFunction(object):
                     self.signature_name = str(tpl)
             tpl = Template(file=os.path.join(gen.target, "templates", "ifunction.c"),
                             searchList=[current_class, self])
+
         gen.impl_file.write(str(tpl))
         apidoc_function_js = Template(file=os.path.join(gen.target,
                                                         "templates",
@@ -321,9 +322,9 @@ class NativeOverloadedFunction(object):
         gen = current_class.generator
         config = gen.config
         static = self.implementations[0].static
-        tpl = Template(file=os.path.join(gen.target, "templates", "function.h"),
-                        searchList=[current_class, self])
-        gen.head_file.write(str(tpl))
+        # tpl = Template(file=os.path.join(gen.target, "templates", "function.h"),
+        #                 searchList=[current_class, self])
+        # gen.head_file.write(str(tpl))
         if static:
             if config['definitions'].has_key('sfunction'):
                 tpl = Template(config['definitions']['sfunction'],
@@ -344,6 +345,7 @@ class NativeOverloadedFunction(object):
                     self.signature_name = str(tpl)
             tpl = Template(file=os.path.join(gen.target, "templates", "ifunction_overloaded.c"),
                             searchList=[current_class, self])
+
         gen.impl_file.write(str(tpl))
 
 
@@ -367,7 +369,16 @@ class NativeClass(object):
         else:
             self.target_class_name = registration_name
         self.namespaced_class_name = namespaced_name(cursor)
+
+        implfilepath = os.path.join(self.generator.outdir, self.generator.out_file + "_" + self.class_name + ".cpp")
+
+        self.generator.impl_file = open(implfilepath, "w+")
+        self.generator.impl_file.write(str(self.generator.layout_head_c))
         self.parse()
+
+    def _close_imp_file(self):
+        self.generator.impl_file.close()
+        self.generator.impl_file = None
 
     def parse(self):
         '''
@@ -418,6 +429,7 @@ class NativeClass(object):
                                        searchList=[{"current_class": self}])
         self.generator.head_file.write(str(prelude_h))
         self.generator.impl_file.write(str(prelude_c))
+
         self.generator.doc_file.write(str(apidoc_classhead_js))
         for m in self.methods_clean():
             m['impl'].generate_code(self)
@@ -433,6 +445,8 @@ class NativeClass(object):
         self.generator.impl_file.write(str(register))
         self.generator.doc_file.write(str(apidoc_classfoot_js))
 
+        self._close_imp_file()
+
     def _deep_iterate(self, cursor=None):
         for node in cursor.get_children():
             if self._process_node(node):
@@ -447,14 +461,14 @@ class NativeClass(object):
         '''
         if cursor.kind == cindex.CursorKind.CXX_BASE_SPECIFIER and not self.class_name in self.generator.classes_have_no_parents:
             parent = cursor.get_definition()
-            if parent.displayname not in self.generator.base_classes_to_skip:
-                #if parent and self.generator.in_listed_classes(parent.displayname):
-                if not self.generator.generated_classes.has_key(parent.displayname):
-                    parent = NativeClass(parent, self.generator)
-                    self.generator.generated_classes[parent.class_name] = parent
-                else:
-                    parent = self.generator.generated_classes[parent.displayname]
-                self.parents.append(parent)
+            if parent and parent.displayname not in self.generator.base_classes_to_skip:
+                if self.generator.in_listed_classes(parent.displayname):
+                    if not self.generator.generated_classes.has_key(parent.displayname):
+                        parent = NativeClass(parent, self.generator)
+                        self.generator.generated_classes[parent.class_name] = parent
+                    else:
+                        parent = self.generator.generated_classes[parent.displayname]
+                    self.parents.append(parent)
         elif cursor.kind == cindex.CursorKind.FIELD_DECL:
             self.fields.append(NativeField(cursor))
         elif cursor.kind == cindex.CursorKind.CXX_ACCESS_SPEC_DECL:
@@ -638,18 +652,18 @@ class Generator(object):
         implfilepath = os.path.join(self.outdir, self.out_file + ".cpp")
         headfilepath = os.path.join(self.outdir, self.out_file + ".hpp")
         docfilepath = os.path.join(self.outdir, self.out_file + "_api.js")
-        self.impl_file = open(implfilepath, "w+")
+
         self.head_file = open(headfilepath, "w+")
         self.doc_file = open(docfilepath, "w+")
 
         layout_h = Template(file=os.path.join(self.target, "templates", "layout_head.h"),
                             searchList=[self])
-        layout_c = Template(file=os.path.join(self.target, "templates", "layout_head.c"),
+        self.layout_head_c = Template(file=os.path.join(self.target, "templates", "layout_head.c"),
                             searchList=[self])
         apidoc_ns_js = Template(file=os.path.join(self.target, "templates", "apidoc_ns.js"),
                                 searchList=[self])
         self.head_file.write(str(layout_h))
-        self.impl_file.write(str(layout_c))
+
         self.doc_file.write(str(apidoc_ns_js))
 
         self._parse_headers()
@@ -658,10 +672,13 @@ class Generator(object):
                             searchList=[self])
         layout_c = Template(file=os.path.join(self.target, "templates", "layout_foot.c"),
                             searchList=[self])
-        self.head_file.write(str(layout_h))
-        self.impl_file.write(str(layout_c))
 
-        self.impl_file.close()
+        self.head_file.write(str(layout_h))
+        impl_file = open(implfilepath, "w+")
+        impl_file.write(str(self.layout_head_c))
+        impl_file.write(str(layout_c))
+        impl_file.close()
+
         self.head_file.close()
         self.doc_file.close()
 
