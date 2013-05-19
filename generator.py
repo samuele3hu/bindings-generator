@@ -525,7 +525,12 @@ class Generator(object):
         self.outdir = opts['outdir']
         self.prefix = opts['prefix']
         self.headers = opts['headers'].split(' ')
-        self.classes = re.split(",\r?\n?", opts['classes'])
+
+        if opts['classes'].find(",") != -1:
+            self.classes = re.split(",\r?\n?", opts['classes'])
+        else:
+            self.classes = re.split("\s+", opts['classes'])
+
         self.classes_have_no_parents = opts['classes_have_no_parents'].split(' ')
         self.base_classes_to_skip = opts['base_classes_to_skip'].split(' ')
         self.abstract_classes = opts['abstract_classes'].split(' ')
