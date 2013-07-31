@@ -1,9 +1,9 @@
 definitions:
   # the names of the functions - we use this to generate the code and to register the functions in
   # the javascript class
-  ifunction: "js_${generator.prefix}_${class_name}_${func_name}"
-  sfunction: "js_${generator.prefix}_${class_name}_${func_name}"
-  constructor: "js_${generator.prefix}_${class_name}_constructor"
+  ifunction: "lua_${generator.prefix}_${class_name}_${func_name}"
+  sfunction: "lua_${generator.prefix}_${class_name}_${func_name}"
+  constructor: "lua_${generator.prefix}_${class_name}_constructor"
 conversions:
   # some times you want to use a special native type when converting from spidermonkey to native
   # the most common case would be from JS-boolean to bool. Using "bool" will fail here since we
@@ -16,7 +16,12 @@ conversions:
     "char": "int32_t"
   to_native:
     # jsval to int
-    int: "ok &= jsval_to_int32(cx, ${in_value}, (int32_t *)&${out_value})"
+    int: |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (int)tolua_tonumber(tolua_S,${arg_idx},0)
+
     "unsigned int": "ok &= jsval_to_uint32(cx, ${in_value}, &${out_value})"
     "unsigned char": "ok &= jsval_to_uint16(cx, ${in_value}, &${out_value})"
     short: "ok &= jsval_to_int32(cx, ${in_value}, &${out_value})"
@@ -53,7 +58,7 @@ conversions:
 
   from_native:
     # int to jsval
-    int: "${out_value} = int32_to_jsval(cx, ${in_value})"
+    int: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
     "unsigned int": "${out_value} = uint32_to_jsval(cx, ${in_value})"
     "unsigned char": "${out_value} = uint32_to_jsval(cx, ${in_value})"
     "long long": "${out_value} = long_long_to_jsval(cx, ${in_value})"

@@ -1,16 +1,24 @@
 ## ===== instance function implementation template
-JSBool ${signature_name}(JSContext *cx, uint32_t argc, jsval *vp)
+static int ${signature_name}(lua_State* tolua_S)
 {
-#if len($arguments) > 0
-	jsval *argv = JS_ARGV(cx, vp);
-	JSBool ok = JS_TRUE;
-#end if
+	int argc = 0;
+	${namespaced_class_name}* cobj = nullptr;
+\#if COCOS2D_DEBUG >= 1
+	tolua_Error tolua_err;
+\#endif
 #if not $is_constructor
-	JSObject *obj = JS_THIS_OBJECT(cx, vp);
-	js_proxy_t *proxy = jsb_get_js_proxy(obj);
-	${namespaced_class_name}* cobj = (${namespaced_class_name} *)(proxy ? proxy->ptr : NULL);
-	JSB_PRECONDITION2( cobj, cx, JS_FALSE, "Invalid Native Object");
+\#if COCOS2D_DEBUG >= 1
+	if (!tolua_isusertype(tolua_S,1,"$class_name",0,&tolua_err)) goto tolua_lerror;
+\#endif
+	cobj = (${namespaced_class_name}*)tolua_tousertype(tolua_S,1,0);
+\#if COCOS2D_DEBUG >= 1
+	if (!cobj) {
+		tolua_error(tolua_S,"invalid 'cobj' in function '${signature_name}'", NULL);
+		return 0;
+	}
+\#endif
 #end if
+	argc = lua_gettop(tolua_S)-1;
 #if len($arguments) >= $min_args
 	#set arg_count = len($arguments)
 	#set arg_idx = $min_args
@@ -30,35 +38,28 @@ JSBool ${signature_name}(JSContext *cx, uint32_t argc, jsval *vp)
 		${arg.to_native({"generator": $generator,
 							 "in_value": "argv[" + str(count) + "]",
 							 "out_value": "arg" + str(count),
+							 "arg_idx": $count+2,
 							 "class_name": $class_name,
 							 "level": 2,
 							 "ntype": str($arg)})};
 			#set $arg_array += ["arg"+str(count)]
 			#set $count = $count + 1
 		#end while
-		#if $arg_idx > 0
-		JSB_PRECONDITION2(ok, cx, JS_FALSE, "Error processing arguments");
-		#end if
 		#set $arg_list = ", ".join($arg_array)
 		#if $is_constructor
 		${namespaced_class_name}* cobj = new ${namespaced_class_name}($arg_list);
 #if not $generator.script_control_cpp
-		cocos2d::Object *_ccobj = dynamic_cast<cocos2d::Object *>(cobj);
-		if (_ccobj) {
-			_ccobj->autorelease();
+		cocos2d::Object *cobj = dynamic_cast<cocos2d::Object *>(cobj);
+		if (cobj) {
+			cobj->autorelease();
 		}
 #end if
-		TypeTest<${namespaced_class_name}> t;
-		js_type_class_t *typeClass;
-		uint32_t typeId = t.s_id();
-		HASH_FIND_INT(_js_global_type_ht, &typeId, typeClass);
-		assert(typeClass);
-		JSObject *obj = JS_NewObject(cx, typeClass->jsclass, typeClass->proto, typeClass->parentProto);
-		JS_SET_RVAL(cx, vp, OBJECT_TO_JSVAL(obj));
-		// link the native object with the javascript object
-		js_proxy_t* p = jsb_new_proxy(cobj, obj);
 #if not $generator.script_control_cpp
-		JS_AddNamedObjectRoot(cx, &p->obj, "${namespaced_class_name}");
+	    int ID = (cobj) ? (int)cobj->_ID : -1;
+	    int* luaID = (cobj) ? &cobj->_luaID : NULL;
+	    toluafix_pushusertype_ccobject(tolua_S, ID, luaID, (void*)cobj,"$class_name");
+#else
+	    tolua_pushusertype(tolua_S,(void*)cobj,"$class_name");
 #end if
 		#else
 			#if $ret_type.name != "void"
@@ -67,24 +68,23 @@ JSBool ${signature_name}(JSContext *cx, uint32_t argc, jsval *vp)
 				#else
 		${ret_type} ret = cobj->${func_name}($arg_list);
 				#end if
-		jsval jsret;
 		${ret_type.from_native({"generator": $generator,
 									"in_value": "ret",
 									"out_value": "jsret",
 									"ntype": str($ret_type),
 									"level": 2})};
-		JS_SET_RVAL(cx, vp, jsret);
 			#else
 		cobj->${func_name}($arg_list);
-		JS_SET_RVAL(cx, vp, JSVAL_VOID);
 			#end if
 		#end if
-		return JS_TRUE;
+		return 1;
 	}
 		#set $arg_idx = $arg_idx + 1
 	#end while
 #end if
-
-	JS_ReportError(cx, "wrong number of arguments: %d, was expecting %d", argc, ${min_args});
-	return JS_FALSE;
+\#if COCOS2D_DEBUG >= 1
+	tolua_lerror:
+	tolua_error(tolua_S,"#ferror in function '${signature_name}'.",&tolua_err);
+	return 0;
+\#endif
 }
