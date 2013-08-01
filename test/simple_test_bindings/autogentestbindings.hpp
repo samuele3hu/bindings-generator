@@ -13,6 +13,11 @@ int register_all_autogentestbindings(lua_State* tolua_S);
 // int lua_register_autogentestbindings_SimpleNativeClass(lua_State* tolua_S);
 // int register_all_autogentestbindings(lua_State* tolua_S);
 // int lua_autogentestbindings_SimpleNativeClass_setSomeField(lua_State* tolua_S);
+// int lua_autogentestbindings_SimpleNativeClass_fullPathForFilename(lua_State* tolua_S);
+// int lua_autogentestbindings_SimpleNativeClass_setObject(lua_State* tolua_S);
+// int lua_autogentestbindings_SimpleNativeClass_setUnsignedint(lua_State* tolua_S);
+// int lua_autogentestbindings_SimpleNativeClass_setUnsignedchar(lua_State* tolua_S);
+// int lua_autogentestbindings_SimpleNativeClass_setStringForKey(lua_State* tolua_S);
 // int lua_autogentestbindings_SimpleNativeClass_SimpleNativeClass(lua_State* tolua_S);
 
 #endif // __autogentestbindings_h__
