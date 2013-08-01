@@ -41,13 +41,14 @@ static int ${signature_name}(lua_State* tolua_S)
 							 "arg_idx": $count+2,
 							 "class_name": $class_name,
 							 "level": 2,
+							 "arg":$arg,
 							 "ntype": str($arg)})};
 			#set $arg_array += ["arg"+str(count)]
 			#set $count = $count + 1
 		#end while
 		#set $arg_list = ", ".join($arg_array)
 		#if $is_constructor
-		${namespaced_class_name}* cobj = new ${namespaced_class_name}($arg_list);
+		cobj = new ${namespaced_class_name}($arg_list);
 #if not $generator.script_control_cpp
 		cocos2d::Object *cobj = dynamic_cast<cocos2d::Object *>(cobj);
 		if (cobj) {
@@ -70,8 +71,10 @@ static int ${signature_name}(lua_State* tolua_S)
 				#end if
 		${ret_type.from_native({"generator": $generator,
 									"in_value": "ret",
-									"out_value": "jsret",
+									"out_value": "ret",
 									"ntype": str($ret_type),
+									"class_name": $class_name,
+									"arg":$arg,
 									"level": 2})};
 			#else
 		cobj->${func_name}($arg_list);

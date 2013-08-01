@@ -15,24 +15,66 @@ conversions:
     "unsigned char": "uint16_t"
     "char": "int32_t"
   to_native:
-    # jsval to int
+    # lua to int
     int: |
       \#if COCOS2D_DEBUG >= 1
       ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
       ${($level) * '\t'}\#endif
       ${($level) * '\t'}${out_value} = (int)tolua_tonumber(tolua_S,${arg_idx},0)
 
-    "unsigned int": "ok &= jsval_to_uint32(cx, ${in_value}, &${out_value})"
-    "unsigned char": "ok &= jsval_to_uint16(cx, ${in_value}, &${out_value})"
-    short: "ok &= jsval_to_int32(cx, ${in_value}, &${out_value})"
-    char: "ok &= jsval_to_int32(cx, ${in_value}, &${out_value})"
-    bool: "ok &= JS_ValueToBoolean(cx, ${in_value}, &${out_value})"
-    float: "ok &= JS_ValueToNumber(cx, ${in_value}, &${out_value})"
-    double: "ok &= JS_ValueToNumber(cx, ${in_value}, &${out_value})"
+    "unsigned int": |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (unsigned int)tolua_tonumber(tolua_S,${arg_idx},0)
+
+    "unsigned char": |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (unsigned char)tolua_tonumber(tolua_S,${arg_idx},0)
+    short: |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (short)tolua_tonumber(tolua_S,${arg_idx},0)
+    char:  |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (char)tolua_tonumber(tolua_S,${arg_idx},0)
+    bool: |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isboolean(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (bool)tolua_toboolean(tolua_S,${arg_idx},0)
+    float: |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (float)tolua_tonumber(tolua_S,${arg_idx},0)
+    double: |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = tolua_tonumber(tolua_S,${arg_idx},0)
+
     # jsval has to be a TypedArray, a UInt32Array with 2 elements
-    "long long": "ok &= jsval_to_long_long(cx, ${in_value}, &${out_value})"
-    "std::string": "ok &= jsval_to_std_string(cx, ${in_value}, &${out_value})"
-    "const char*": "std::string ${out_value}_tmp; ok &= jsval_to_std_string(cx, ${in_value}, &${out_value}_tmp); ${out_value} = ${out_value}_tmp.c_str()"
+    "long long": |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isnumber(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (long long)tolua_tonumber(tolua_S,${arg_idx},0)
+    "std::string": |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_iscppstring(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = tolua_tocppstring(tolua_S,${arg_idx},0)
+    "const char*": |
+      \#if COCOS2D_DEBUG >= 1
+      ${($level) * '\t'}if (!tolua_isstring(tolua_S,${arg_idx},0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}\#endif
+      ${($level) * '\t'}${out_value} = (const char*)tolua_tostring(tolua_S,${arg_idx},0)
     "Point": "ok &= jsval_to_ccpoint(cx, ${in_value}, &${out_value})"
     "Rect": "ok &= jsval_to_ccrect(cx, ${in_value}, &${out_value})"
     "Size": "ok &= jsval_to_ccsize(cx, ${in_value}, &${out_value})"
@@ -47,26 +89,22 @@ conversions:
     "AffineTransform": "ok &= jsval_to_ccaffinetransform(cx, ${in_value}, &${out_value})"
     "FontDefinition":  "ok &= jsval_to_FontDefinition(cx, ${in_value}, &${out_value})"
     object: |
-      do {
-      ${($level + 1) * '\t'}if (!${in_value}.isObject()) { ok = JS_FALSE; break; }
-      ${($level + 1) * '\t'}js_proxy_t *proxy;
-      ${($level + 1) * '\t'}JSObject *tmpObj = JSVAL_TO_OBJECT(${in_value});
-      ${($level + 1) * '\t'}proxy = jsb_get_js_proxy(tmpObj);
-      ${($level + 1) * '\t'}${out_value} = (${ntype})(proxy ? proxy->ptr : NULL);
-      ${($level + 1) * '\t'}JSB_PRECONDITION2( ${out_value}, cx, JS_FALSE, "Invalid Native Object");
-      ${($level + 0) * '\t'}} while (0)
+      if (!tolua_isusertype(tolua_S,${arg_idx},"${arg}",0,&tolua_err)) goto tolua_lerror;
+      ${($level) * '\t'}${out_value} = (${arg})tolua_tousertype(tolua_S,${arg_idx},0);
 
   from_native:
-    # int to jsval
+    # int to lua
     int: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
-    "unsigned int": "${out_value} = uint32_to_jsval(cx, ${in_value})"
-    "unsigned char": "${out_value} = uint32_to_jsval(cx, ${in_value})"
-    "long long": "${out_value} = long_long_to_jsval(cx, ${in_value})"
-    "std::string": "${out_value} = std_string_to_jsval(cx, ${in_value})"
-    "const char*": "${out_value} = c_string_to_jsval(cx, ${in_value})"
-    bool: "${out_value} = BOOLEAN_TO_JSVAL(${in_value})"
-    float: "${out_value} = DOUBLE_TO_JSVAL(${in_value})"
-    double: "${out_value} = DOUBLE_TO_JSVAL(${in_value})"
+    "unsigned int": "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    "unsigned char": "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    short: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    char: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    "long long": "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    "std::string": "tolua_pushcppstring(tolua_S,(const char*)${in_value})"
+    "const char*": "tolua_pushstring(tolua_S,(const char*)${in_value})"
+    bool: "tolua_pushboolean(tolua_S,(bool)${in_value})"
+    float: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
+    double: "tolua_pushnumber(tolua_S,(lua_Number)${in_value})"
     "Point": "${out_value} = ccpoint_to_jsval(cx, ${in_value})"
     "Rect": "${out_value} = ccrect_to_jsval(cx, ${in_value})"
     "Size": "${out_value} = ccsize_to_jsval(cx, ${in_value})"
@@ -80,12 +118,4 @@ conversions:
     "Dictionary*": "${out_value} = ccdictionary_to_jsval(cx, ${in_value})"
     "AffineTransform": "${out_value} = ccaffinetransform_to_jsval(cx, ${in_value})"
     "FontDefinition": "${out_value} = FontDefinition_to_jsval(cx, ${in_value})"
-    object: |
-      do {
-      ${($level + 1) * '\t'}if (${in_value}) {
-      ${($level + 2) * '\t'}js_proxy_t *proxy = js_get_or_create_proxy<${ntype.replace("*", "")}>(cx, ${in_value});
-      ${($level + 2) * '\t'}${out_value} = OBJECT_TO_JSVAL(proxy->obj);
-      ${($level + 1) * '\t'}} else {
-      ${($level + 2) * '\t'}${out_value} = JSVAL_NULL;
-      ${($level + 1) * '\t'}}
-      ${($level) * '\t'}} while (0)
+    object: "tolua_pushusertype(tolua_S,${in_value},\"${ntype}\")"

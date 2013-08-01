@@ -11,8 +11,17 @@ enum someThingEnumerated {
 	kValue3,
 	kValue4
 };
+    
+class SimpleFatherClass
+{
+    
+};
+    
+class SimpleSecondClass
+{
+};
 
-class SimpleNativeClass
+class SimpleNativeClass:public SimpleFatherClass
 {
 // protected:
 // 	int m_someField;
@@ -45,6 +54,37 @@ public:
         printf("SimpleNativeClass method: setSomeField... %d, %d", f, b);
 		return 1;
 	}
+
+	unsigned int setUnsignedint(unsigned int value,unsigned int b = 0)
+	{
+		printf("SimpleNativeClass method: setUnsignedint... %u,%u", value,b);
+		return 2;
+	}
+
+	unsigned char setUnsignedchar(unsigned char value,unsigned int b = 0)
+	{
+		printf("SimpleNativeClass method: setUnsignedchar... %u,%u", value,b);
+		return 3;
+	}
+
+	void setStringForKey(const std::string& strValue)
+	{
+		printf("SimpleNativeClass method: setStringForKey... %s", strValue.c_str());
+		return ;
+	}
+
+	std::string fullPathForFilename(const char* filename)
+	{
+		printf("SimpleNativeClass method: fullPathForFilename... %s", filename);
+		return filename;
+	}
+
+	SimpleFatherClass *setObject(int index,const SimpleFatherClass* object,const SimpleSecondClass* object1)
+	{
+		printf("SimpleNativeClass method: setObject... %s", "come in");
+		return NULL;
+	}
+
 	// void setSomeField() {
 
 	// }
