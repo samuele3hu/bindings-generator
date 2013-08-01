@@ -89,7 +89,7 @@ conversions:
     "AffineTransform": "ok &= jsval_to_ccaffinetransform(cx, ${in_value}, &${out_value})"
     "FontDefinition":  "ok &= jsval_to_FontDefinition(cx, ${in_value}, &${out_value})"
     object: |
-      if (!tolua_isusertype(tolua_S,${arg_idx},"${arg}",0,&tolua_err)) goto tolua_lerror;
+      if (!tolua_isusertype(tolua_S,${arg_idx},"${ntype}",0,&tolua_err)) goto tolua_lerror;
       ${($level) * '\t'}${out_value} = (${arg})tolua_tousertype(tolua_S,${arg_idx},0);
 
   from_native:

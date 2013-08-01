@@ -42,7 +42,7 @@ static int ${signature_name}(lua_State* tolua_S)
 							 "class_name": $class_name,
 							 "level": 2,
 							 "arg":$arg,
-							 "ntype": str($arg)})};
+							 "ntype": $arg.name.replace("*", "")})};
 			#set $arg_array += ["arg"+str(count)]
 			#set $count = $count + 1
 		#end while
@@ -72,9 +72,8 @@ static int ${signature_name}(lua_State* tolua_S)
 		${ret_type.from_native({"generator": $generator,
 									"in_value": "ret",
 									"out_value": "ret",
-									"ntype": str($ret_type),
+									"ntype": $ret_type.name.replace("*", ""),
 									"class_name": $class_name,
-									"arg":$arg,
 									"level": 2})};
 			#else
 		cobj->${func_name}($arg_list);
