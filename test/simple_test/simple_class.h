@@ -75,6 +75,14 @@ public:
     unsigned char g;
     unsigned char b;
 };
+    
+class AffineTransform
+{
+public:
+    AffineTransform(){}
+    float a, b, c, d;
+    float tx, ty;
+};
 
 class SimpleFatherClass
 {
@@ -252,3 +260,6 @@ void color4f_to_luaval(lua_State* L,const Color4F& cc);
 
 bool luaval_to_color3b(lua_State* L,int lo,Color3B* outValue);
 void color3b_to_luaval(lua_State* L,const Color3B& cc);
+
+bool luaval_to_affinetransform(lua_State* L,int lo, AffineTransform* outValue);
+void affinetransform_to_luaval(lua_State* L,const AffineTransform& inValue);

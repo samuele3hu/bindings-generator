@@ -552,6 +552,80 @@ void color3b_to_luaval(lua_State* L,const Color3B& cc)
     lua_rawset(L, -3);                                  /* table[key] = value, L: table */
 }
 
+bool luaval_to_affinetransform(lua_State* L,int lo, AffineTransform* outValue)
+{
+    if (NULL == L || NULL == outValue)
+        return false;
+    bool ok = true;
+#if COCOS2D_DEBUG >=1
+    tolua_Error tolua_err;
+    if (!tolua_istable(L, lo, 0, &tolua_err) )
+    {
+        luaval_to_native_err(L,"#ferror:",&tolua_err);
+        ok = false;
+    }
+#endif
+    
+    if (ok)
+    {
+        lua_pushstring(L, "a");
+        lua_gettable(L,lo);
+        outValue->a = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+        
+        lua_pushstring(L, "b");
+        lua_gettable(L,lo);
+        outValue->b = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+        
+        lua_pushstring(L, "c");
+        lua_gettable(L,lo);
+        outValue->b = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+        
+        lua_pushstring(L, "d");
+        lua_gettable(L,lo);
+        outValue->b = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+        
+        lua_pushstring(L, "tx");
+        lua_gettable(L,lo);
+        outValue->b = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+        
+        lua_pushstring(L, "ty");
+        lua_gettable(L,lo);
+        outValue->b = lua_isnil(L,-1) ? 0 : (float)lua_tonumber(L,-1);
+        lua_pop(L,1);
+    }
+    return ok;
+}
+
+void affinetransform_to_luaval(lua_State* L,const AffineTransform& inValue)
+{
+    if (NULL  == L)
+        return;
+    lua_newtable(L);                                    /* L: table */
+    lua_pushstring(L, "a");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.a);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+    lua_pushstring(L, "b");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.b);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+    lua_pushstring(L, "c");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.c);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+    lua_pushstring(L, "d");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.d);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+    lua_pushstring(L, "tx");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.d);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+    lua_pushstring(L, "ty");                             /* L: table key */
+    lua_pushnumber(L, (lua_Number) inValue.d);               /* L: table key value*/
+    lua_rawset(L, -3);                                  /* table[key] = value, L: table */
+}
+
 namespace cocos2dTest
 {
     SimpleNativeClass* SimpleNativeClass::create()
