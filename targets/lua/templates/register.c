@@ -70,6 +70,22 @@ int lua_register_${generator.prefix}_${current_class.class_name}(lua_State* tolu
         tolua_variable(tolua_S,"${m.name}", ${m.signature_name}_get${m.name}, ${m.signature_name}_set${m.name});
     #end for
     tolua_endmodule(tolua_S);
+
+    #if len($current_class.enums) > 0 
+        #for nenum in $current_class.enums
+    tolua_module(tolua_S, "$nenum.enum_name", 0);
+    tolua_beginmodule(tolua_S,"$nenum.enum_name");
+                #for enum_constant in $nenum.children
+                    #if len($nenum.enum_name) != 0
+        tolua_constant(tolua_S,"$enum_constant.displayname",static_cast<lua_Number>($nenum.namespace_name::$nenum.enum_name::$enum_constant.displayname));
+                    #else
+        tolua_constant(tolua_S,"$enum_constant.displayname",static_cast<lua_Number>($nenum.namespace_name::$enum_constant.displayname));
+                    #end if
+                #end for
+    tolua_endmodule(tolua_S);
+        #end for
+    #end if
+
     std::string typeName = typeid(${current_class.namespaced_class_name}).name();
     g_luaType[typeName] = "${generator.scriptname_from_native($current_class.namespaced_class_name, $current_class.namespace_name)}";
     g_typeCast["${current_class.class_name}"] = "${generator.scriptname_from_native($current_class.namespaced_class_name, $current_class.namespace_name)}";

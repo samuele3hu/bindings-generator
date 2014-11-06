@@ -471,6 +471,20 @@ class NativeField(object):
                        searchList=[current_class, self])
         gen.impl_file.write(str(tpl))
 
+class NativeEnum(object):
+    def __init__(self, cursor):
+        self.cursor = cursor
+        self.enum_name = cursor.displayname
+        self.children  = list(cursor.get_children())
+
+    def set_namespace_of_enum(self, namespace):
+        self.namespace_name = namespace
+
+    def generate_code(self, current_class = None, generator = None):
+        gen = current_class.generator if current_class else generator
+        config = gen.config
+
+
 # return True if found default argument.
 def iterate_param_node(param_node, depth=1):
     for node in param_node.get_children():
@@ -708,6 +722,8 @@ class NativeClass(object):
         self.override_methods = {}
         self.has_constructor  = False
         self.namespace_name   = ""
+        #enum type
+        self.enums = []
 
         registration_name = generator.get_class_or_rename_class(self.class_name)
         if generator.remove_prefix:
@@ -727,9 +743,9 @@ class NativeClass(object):
         '''
         parse the current cursor, getting all the necesary information
         '''
-        #print "parse %s class begin" % (self.class_name)
+        print "parse %s class begin" % (self.class_name)
         self._deep_iterate(self.cursor)
-        #print "parse %s class end" % (self.class_name)
+        print "parse %s class end" % (self.class_name)
 
     def methods_clean(self):
         '''
@@ -828,7 +844,7 @@ class NativeClass(object):
                 self.record_deprecated_file.close()
     def _deep_iterate(self, cursor=None, depth=0):
         for node in cursor.get_children():
-            # print("%s%s - %s" % ("> " * depth, node.displayname, node.kind))
+            print("%s%s - %s" % ("> " * depth, node.displayname, node.kind))
             if self._process_node(node):
                 self._deep_iterate(node, depth + 1)
 
@@ -878,7 +894,14 @@ class NativeClass(object):
 
             if parent_name == "Ref":
                 self.is_ref_class = True
-
+        elif cursor.kind == cindex.CursorKind.ENUM_DECL and self._current_visibility == cindex.AccessSpecifierKind.PUBLIC:
+            # enum_constants = list(cursor.get_children())
+            # for enum_value in enum_constants:
+            #     print("enum constants value is " + str(enum_value.enum_value) + " name is: " + enum_value.displayname + " namespace_name is: " + self.namespaced_class_name)
+            # print("enum class len is " + str(len(enum_constants)))
+            nenum = NativeEnum(cursor)
+            nenum.set_namespace_of_enum(self.namespaced_class_name)
+            self.enums.append(nenum)
         elif cursor.kind == cindex.CursorKind.FIELD_DECL:
             self.fields.append(NativeField(cursor))
             if self._current_visibility == cindex.AccessSpecifierKind.PUBLIC and NativeField.can_parse(cursor.type):
