@@ -262,6 +262,9 @@ class NativeType(object):
         nt = NativeType()
         nt.name = displayname.split("::")[-1]
         nt.namespaced_name = displayname
+        nt.namespace_name  = displayname.replace("*","")
+        if -1 != displayname.rfind("::"):
+            nt.namespace_name  = displayname[0:displayname.rfind("::") + 2] 
         nt.whole_name = nt.namespaced_name
         nt.is_object = True
         return nt

@@ -55,7 +55,8 @@ int ${signature_name}(lua_State* tolua_S)
                                       "level": 2,
                                       "arg":$arg,
                                       "ntype": $arg.namespaced_name.replace("*", ""),
-                                      "scriptname": $generator.scriptname_from_native($arg.namespaced_name, $arg.namespace_name)})};
+                                      "scriptname": $generator.scriptname_from_native($arg.namespaced_name, $arg.namespace_name),
+                                      "static": $static})};
             #set $arg_array += ["arg"+str(count)]
             #set $count = $count + 1
         #end while

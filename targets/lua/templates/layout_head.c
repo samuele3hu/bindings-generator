@@ -7,5 +7,7 @@ $macro_judgement
 #end for
 \#include "tolua_fix.h"
 \#include "LuaBasicConversions.h"
+\#include "CCLuaEngine.h"
+\#include "CCLuaValue.h"
 
 
